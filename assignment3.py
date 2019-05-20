@@ -2,8 +2,9 @@
 
 import vcf
 import httplib2
+import json
 
-__author__ = 'XXX'
+__author__ = 'Glueck Tobias'
 
 
 ##
@@ -25,7 +26,7 @@ class Assignment3:
         print("PyVCF version: %s" % vcf.VERSION)
         
         ## Call annotate_vcf_file here
-        self.vcf_path = ""  # TODO
+        self.vcf_path = "chr16.vcf"  # TODO
 
     def annotate_vcf_file(self):
         '''
@@ -60,45 +61,51 @@ class Assignment3:
         res, con = h.request('http://myvariant.info/v1/variant', 'POST', params, headers=headers)
         annotation_result = con.decode('utf-8')
         
+        self.annotation_json = json.loads(annotation_result)
         ## TODO now do something with the 'annotation_result'
         
         ##
         ## End example code
         ##
         
-        return None  ## return the data structure here
+        return self.annotation_json  ## return the data structure here
     
     
     def get_list_of_genes(self):
-        '''
-        Print the name of genes in the annotation data set
-        :return:
-        '''
-        print("TODO")
+        for g in self.annotation_json:
+            if "cadd" in g:
+                if "genename" in g["cadd"]["gene"]:
+                    return(g["cadd"]["gene"]["genename"])
     
     
     def get_num_variants_modifier(self):
-        '''
-        Print the number of variants with putative_impact "MODIFIER"
-        :return:
-        '''
-        print("TODO")
+        c = 0
+        for i in self.annotation_json:
+            if "snpeff" in i:
+                for j in i["snpeff"]["ann"]:
+                    if j["putative_impact"] == "MODIFIER":
+                        c += 1
+        return c
+
+
         
     
     def get_num_variants_with_mutationtaster_annotation(self):
-        '''
-        Print the number of variants with a 'mutationtaster' annotation
-        :return:
-        '''
-        print("TODO")
+        c = 0
+        for i in self.annotation_json:
+            if "dbnsfp" in i:
+                if "mutationtaster"] in i["dbnsfp"]:
+                    c += 1
+        return c
         
     
     def get_num_variants_non_synonymous(self):
-        '''
-        Print the number of variants with 'consequence' 'NON_SYNONYMOUS'
-        :return:
-        '''
-        print("TODO")
+        c = 0
+        for i in self.annotation_json:
+            if 'cadd' in i:
+                if i['cadd']['consequence'] == 'NON_SYNONYMOUS':
+                    c += 1
+        return c
         
     
     def view_vcf_in_browser(self):
@@ -114,7 +121,11 @@ class Assignment3:
     
     def print_summary(self):
         self.annotate_vcf_file()
-        print("Print all results here")
+        print("List of genes: " + self.get_list_of_genes())
+        print("Number of variants: " + self.get_num_variants_modifier())
+        print("Number of variants with mutations: " + self.get_num_variants_with_mutationtaster_annotation())
+        print("Number of non synonymous variants: " + self.get_num_variants_non_synonymous())
+
     
     
 def main():
